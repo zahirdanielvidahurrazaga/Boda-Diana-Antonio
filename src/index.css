@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Great+Vibes&display=swap');
+@import "tailwindcss";
+
+@layer theme {
+  :root {
+    /* ── Paleta tomada de la invitación de Diana & Antonio ──
+       crema del papel · caramelo de las letras · topo de las flores secas */
+    --background: #F6EFE9;
+    --foreground: #4A3A30;
+    --primary: #4A3A30;
+    --accent: #AA8268;
+    --accent-dark: #8A6650;
+    --accent-light: #E8D9CC;
+    --silver: #A19289;
+    --silver-light: #C9BAB1;
+    --muted: #EDE3DA;
+    --muted-foreground: #7E6C60;
+  }
+
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-primary: var(--primary);
+    --color-accent: var(--accent);
+    --color-silver: var(--silver);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --font-heading: "EB Garamond", serif;
+    --font-sans: "EB Garamond", serif;
+    --font-script: "Great Vibes", cursive;
+    --font-hand: "Caveat", cursive;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* Papel de algodón como el de la invitación: fibra fina sobre crema. */
+  background-color: var(--background);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .45  0 0 0 0 .38  0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  margin: 0;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-script {
+  font-family: var(--font-script);
+}
+
+::selection {
+  background: var(--accent-light);
+  color: var(--foreground);
+}
+
+/* ─── Grain overlay ─── */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.grain-overlay::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  width: 300%;
+  height: 300%;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 10s steps(10) infinite;
+}
+
+@keyframes grain {
+  0%   { transform: translate(0%,   0%);   }
+  10%  { transform: translate(-5%,  -10%); }
+  20%  { transform: translate(-15%, 5%);   }
+  30%  { transform: translate(7%,   -25%); }
+  40%  { transform: translate(-5%,  25%);  }
+  50%  { transform: translate(-15%, 10%);  }
+  60%  { transform: translate(15%,  0%);   }
+  70%  { transform: translate(0%,   15%);  }
+  80%  { transform: translate(3%,   35%);  }
+  90%  { transform: translate(-10%, 10%);  }
+  100% { transform: translate(0%,   0%);   }
+}
+
+/* ─── Glass ─── */
+.glass {
+  background: rgba(247, 242, 234, 0.75);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 4px 24px rgba(60, 51, 43, 0.05);
+}
+
+/* ─── Degradado plata (crucifijo de la invitación) ─── */
+.silver-gradient {
+  background: linear-gradient(135deg, var(--silver) 0%, var(--silver-light) 50%, var(--silver) 100%);
+}
+
+/* ─── Skeleton shimmer ─── */
+.skeleton {
+  background: linear-gradient(90deg, var(--muted) 25%, #E6DCCC 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar        { width: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--accent); border-radius: 10px; opacity: 0.4; }
