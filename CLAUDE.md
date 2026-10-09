@@ -177,7 +177,8 @@ Falta probar en teléfono real — eso lo hace Zahir.
 
 ## Lo que falta
 
-1. Proyecto de **Cloudflare Pages** conectado a este repo, con las 2 variables.
-2. **Generar el QR** con la URL real e imprimir las tarjetas.
+1. ✅ Desplegado en **https://boda-diana-antonio.pages.dev** (Cloudflare Pages, push a main = deploy).
+2. ✅ QR generado (9-oct) y verificado que lleva a esa URL: `public/qr.png` y
+   `qr-card.html` (local, ignorado). Falta **imprimir** las tarjetas.
 3. (Opcional) **Foto de la pareja** para el fondo de la bienvenida:
    `public/pareja.jpg` + `HERO_PHOTO = '/pareja.jpg'` en `WelcomeScreen.tsx`.
