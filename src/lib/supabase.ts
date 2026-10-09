@@ -23,6 +23,8 @@ export type PhotoLike = {
   id: string;
   photo_id: string;
   guest_key: string;
+  /** La reacción; el corazón es '❤️' */
+  emoji?: string;
   created_at: string;
 };
 

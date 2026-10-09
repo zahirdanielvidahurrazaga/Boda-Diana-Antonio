@@ -34,7 +34,8 @@ export default function AdminPage() {
     try {
       const [photosRes, likesRes] = await Promise.all([
         supabase.from('photos').select('*').order('created_at', { ascending: false }),
-        supabase.from('photo_likes').select('photo_id'),
+        // Solo corazones: las demás reacciones (emojis) no cuentan como corazón.
+        supabase.from('photo_likes').select('photo_id').eq('emoji', '❤️').limit(10000),
       ]);
       if (photosRes.error) throw photosRes.error;
       setPhotos(photosRes.data || []);

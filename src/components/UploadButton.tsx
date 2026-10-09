@@ -21,12 +21,21 @@ const STATUS_LABEL: Record<Status, string> = {
   error:       'Error al subir. Intenta de nuevo.',
 };
 
+// Vidrio líquido: casi transparente, con un brillo que entra por arriba a la
+// izquierda, un borde que capta luz y un tinte caramelo leve en la orilla de
+// abajo (como la cera del sello). Sin brightness(): eso lo volvía un disco blanco.
 const circleGlass = {
-  background: 'rgba(255,255,255,0.28)',
-  backdropFilter: 'blur(28px) saturate(180%) brightness(1.08)',
-  WebkitBackdropFilter: 'blur(28px) saturate(180%) brightness(1.08)',
-  border: '1px solid rgba(255,255,255,0.45)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 20px rgba(0,0,0,0.12)',
+  background: 'radial-gradient(120% 100% at 28% 12%, rgba(255,255,255,0.75), rgba(255,255,255,0) 52%), linear-gradient(160deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08))',
+  backdropFilter: 'blur(18px) saturate(190%)',
+  WebkitBackdropFilter: 'blur(18px) saturate(190%)',
+  border: '1px solid rgba(255,255,255,0.75)',
+  boxShadow: [
+    'inset 0 1.5px 0 rgba(255,255,255,0.95)',
+    'inset 0 -10px 18px rgba(170,130,104,0.16)',
+    'inset 0 0 0 0.5px rgba(170,130,104,0.18)',
+    '0 12px 28px rgba(74,58,48,0.16)',
+    '0 2px 6px rgba(74,58,48,0.08)',
+  ].join(', '),
 };
 
 export default function UploadButton({ guestName, onUploadSuccess }: UploadButtonProps) {
@@ -219,7 +228,7 @@ export default function UploadButton({ guestName, onUploadSuccess }: UploadButto
               : <ImageIcon size={22} className="text-primary/60" />
             }
           </div>
-          <span className="text-[8.5px] tracking-[0.12em] text-primary/40 font-sans leading-none">
+          <span className="text-[10px] tracking-[0.12em] text-primary/60 font-sans leading-none">
             Galería
           </span>
         </motion.button>
@@ -242,7 +251,7 @@ export default function UploadButton({ guestName, onUploadSuccess }: UploadButto
               : <Camera size={24} className="text-primary/65" />
             }
           </div>
-          <span className="text-[8.5px] tracking-[0.12em] text-primary/40 font-sans leading-none">
+          <span className="text-[10px] tracking-[0.12em] text-primary/60 font-sans leading-none">
             Cámara
           </span>
         </motion.button>

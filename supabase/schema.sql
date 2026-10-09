@@ -91,3 +91,18 @@ create policy "communion_write" on storage.objects
 drop policy if exists "communion_delete" on storage.objects;
 create policy "communion_delete" on storage.objects
   for delete using (bucket_id = 'boda-photos');
+
+
+-- ───────────────────── REACCIONES (como historia de IG) ─────────────────────
+-- photo_likes guarda TODAS las reacciones: el corazón es simplemente el emoji
+-- '❤️'. Cada invitado puede dar cada emoji una vez por foto (y quitarlo).
+alter table public.photo_likes add column if not exists emoji text not null default '❤️';
+
+-- Antes era un corazón por invitado por foto; ahora uno por EMOJI.
+alter table public.photo_likes drop constraint if exists photo_likes_photo_id_guest_key_key;
+create unique index if not exists photo_likes_una_por_emoji on public.photo_likes (photo_id, guest_key, emoji);
+
+-- Solo los emojis de la barra (que nadie meta texto cualquiera con la llave pública).
+alter table public.photo_likes drop constraint if exists photo_likes_emoji_valido;
+alter table public.photo_likes add constraint photo_likes_emoji_valido
+  check (emoji in ('❤️', '😍', '🥹', '😂', '👏', '🔥', '🥂', '💃'));

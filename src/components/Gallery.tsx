@@ -27,7 +27,7 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
   const insertBuffer = useRef<Photo[]>([]);
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { counts, mine, toggle } = useLikes();
+  const { counts, mine, toggle, reacciones, mias, reaccionar } = useLikes();
 
   useEffect(() => {
     fetchPhotos();
@@ -102,6 +102,10 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
   ) => {
     const tilt = TILTS[index % TILTS.length];
     const likes = counts[photo.id] ?? 0;
+    // Las tres reacciones más usadas que no son el corazón (ese ya tiene su botón).
+    const otras = Object.entries(reacciones[photo.id] ?? {})
+      .filter(([e, n]) => e !== '❤️' && n > 0).sort((x, y) => y[1] - x[1]).slice(0, 3);
+    const totalOtras = Object.entries(reacciones[photo.id] ?? {}).filter(([e]) => e !== '❤️').reduce((s, [, n]) => s + n, 0);
     const liked = mine.has(photo.id);
 
     return (
@@ -137,8 +141,8 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
 
         {/* Firma Polaroid */}
         <div
-          className="pl-1.5 pr-11 pt-2.5"
-          style={{ height: '54px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1px' }}
+          className="pl-1.5 pt-2.5"
+          style={{ height: '54px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1px', paddingRight: otras.length ? 96 : 44 }}
         >
           {photo.message && (
             <p
@@ -166,13 +170,23 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
           </p>
         </div>
 
+        {/* Otras reacciones (las más usadas), junto al corazón */}
+        {otras.length > 0 && (
+          <div className="absolute bottom-[15px] right-[46px] flex items-center" aria-label={`${totalOtras} reacciones`}>
+            {otras.map(([e], i) => (
+              <span key={e} style={{ fontSize: 12, marginLeft: i ? -4 : 0, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.12))' }}>{e}</span>
+            ))}
+            <span className="ml-1 font-sans" style={{ fontSize: 10.5, color: 'rgba(74,58,48,0.55)' }}>{totalOtras}</span>
+          </div>
+        )}
+
         {/* Corazón */}
         <div className="absolute right-1.5 bottom-2.5">
           <HeartButton liked={liked} count={likes} onToggle={() => toggle(photo.id)} size={17} />
         </div>
       </motion.div>
     );
-  }, [counts, mine, toggle]);
+  }, [counts, mine, toggle, reacciones]);
 
   /* ── Esqueleto de carga ── */
   if (loading) {
@@ -196,8 +210,10 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
   if (photos.length === 0) {
     return (
       <div className="text-center py-32 border-y border-[var(--silver)]/20">
-        <div className="w-12 h-12 rounded-full border border-[var(--accent)]/30 flex items-center justify-center mx-auto mb-5">
-          <span className="font-script text-[var(--accent)] text-xl leading-none pt-1">{EVENT.iniciales.join('&')}</span>
+        <div className="w-16 h-16 rounded-full border border-[var(--accent)]/30 flex items-center justify-center mx-auto mb-5">
+          <span className="font-heading text-[var(--accent)] text-[1.15rem] leading-none tracking-[0.04em]">
+            {EVENT.iniciales[0]}<span className="font-script text-[0.95rem] mx-[1px]">&amp;</span>{EVENT.iniciales[1]}
+          </span>
         </div>
         <p className="text-[var(--muted-foreground)]/60 font-heading italic text-2xl mb-2.5">
           Aún no hay momentos.
@@ -245,6 +261,9 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
             likeCounts={counts}
             likedByMe={mine}
             onToggleLike={toggle}
+            reacciones={reacciones}
+            misReacciones={mias}
+            onReaccionar={reaccionar}
           />
         )}
       </AnimatePresence>

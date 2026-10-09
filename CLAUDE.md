@@ -103,6 +103,20 @@ Dos decisiones de color que costaron ver y no hay que revertir:
 Todo respeta `prefers-reduced-motion`: si el invitado pidió menos movimiento en
 su teléfono, el corazón cambia sin estallido.
 
+### Reacciones como historia de Instagram (9-oct)
+
+En la foto grande hay una barra de vidrio con ❤️ 😍 🥹 😂 👏 🔥 🥂 💃
+(`Reacciones.tsx`): al tocar uno salen copias volando; tocarlo de nuevo lo
+quita. Debajo, el resumen de la foto (las mías en caramelo). En cada Polaroid,
+junto al corazón, los 3 emojis más usados y el total. El corazón y el doble tap
+siguen igual: el corazón es el emoji '❤️'.
+
+`useLikes.ts` guarda FILAS por id (no contadores): sin dobles conteos entre la
+recarga y el tiempo real, y los DELETE se resuelven por id (con RLS, Supabase
+manda en el aviso solo la llave primaria). Lo mío se pinta como "pendiente" y
+un segundo toque a la misma reacción en camino se ignora. Carga paginada de
+1,000 en 1,000. Todo esto salió de la revisión de Codex del 9-oct.
+
 ---
 
 ## Base de datos
@@ -125,8 +139,9 @@ Ojo: usar **curl, no python-urllib** — Cloudflare bloquea ese user-agent con 4
 
 ```
 photos        id · created_at · url · guest_name · event_id · width · height · message
-photo_likes   id · photo_id → photos(id) · guest_key · created_at
-              unique(photo_id, guest_key)  ← un corazón por invitado por foto
+photo_likes   id · photo_id → photos(id) · guest_key · emoji · created_at
+              unique(photo_id, guest_key, emoji)  ← cada emoji una vez por invitado por foto
+              check: emoji en los 8 de la barra
 ```
 
 Bucket de Storage: **`boda-photos`** (público), ruta `photos/{timestamp}-{random}.jpg`.

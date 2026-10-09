@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion, type PanInfo } from 'framer-
 import { X, ChevronLeft, ChevronRight, Download, Heart } from 'lucide-react';
 import type { Photo } from '@/lib/supabase';
 import HeartButton from './HeartButton';
+import Reacciones from './Reacciones';
 
 interface LightboxProps {
   photos: Photo[];
@@ -12,6 +13,9 @@ interface LightboxProps {
   likeCounts: Record<string, number>;
   likedByMe: Set<string>;
   onToggleLike: (photoId: string) => void;
+  reacciones: Record<string, Record<string, number>>;
+  misReacciones: Record<string, Set<string>>;
+  onReaccionar: (photoId: string, emoji: string) => Promise<boolean>;
 }
 
 const slideVariants = {
@@ -30,6 +34,7 @@ const glassBtn = {
 export default function Lightbox({
   photos, currentIndex, onClose, onNavigate,
   likeCounts, likedByMe, onToggleLike,
+  reacciones, misReacciones, onReaccionar,
 }: LightboxProps) {
   const [direction, setDirection] = useState(0);
   const [showControls, setShowControls] = useState(true);
@@ -187,7 +192,10 @@ export default function Lightbox({
               style={{
                 background: '#fff',
                 padding: '9px 9px 62px 9px',
-                width: 'min(80vw, 340px)',
+                // En pantallas bajas la foto se achica para que la barra de reacciones
+                // siempre quepa (~340 px entre marco, firma, barra, resumen y puntos).
+                width: `min(80vw, 340px, calc((100dvh - 340px) * ${(photo.width ?? 3) / (photo.height ?? 4)}))`,
+                minWidth: 180,
                 boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 6px 22px rgba(0,0,0,0.32)',
               }}
             >
@@ -275,9 +283,17 @@ export default function Lightbox({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.25 }}
-            className="relative z-10 pb-12"
+            className="relative z-10 pb-10"
             onClick={e => e.stopPropagation()}
           >
+            {/* Reacciones como en una historia de Instagram */}
+            <div className="mb-5">
+              <Reacciones
+                conteo={reacciones[photo.id] ?? {}}
+                mias={misReacciones[photo.id] ?? new Set()}
+                onReaccionar={emoji => onReaccionar(photo.id, emoji)}
+              />
+            </div>
             {/* Flechas en escritorio */}
             <div className="hidden sm:block">
               {hasPrev && (
