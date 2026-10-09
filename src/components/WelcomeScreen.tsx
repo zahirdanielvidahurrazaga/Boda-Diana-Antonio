@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EVENT } from '@/lib/event';
+import Sello from './Sello';
 
 interface WelcomeScreenProps {
   onJoin: (name: string) => void;
@@ -13,46 +14,17 @@ interface WelcomeScreenProps {
  */
 const HERO_PHOTO: string | null = null;
 
-/**
- * Sello de lacre con las iniciales — el mismo que cierra el sobre de la
- * invitación (bronce rosado con relieve). Hecho en SVG: borde irregular de
- * cera, anillo interior y las letras en EB Garamond.
- */
-function Sello({ size = 96 }: { size?: number }) {
-  const [a, b] = EVENT.iniciales;
-  return (
-    <svg viewBox="0 0 120 120" width={size} height={size} aria-hidden="true" style={{ filter: 'drop-shadow(0 6px 10px rgba(74,58,48,0.28))' }}>
-      <defs>
-        <radialGradient id="cera" cx="38%" cy="32%" r="75%">
-          <stop offset="0%" stopColor="#D2B4A2" />
-          <stop offset="45%" stopColor="#AA8268" />
-          <stop offset="100%" stopColor="#6E4E3D" />
-        </radialGradient>
-        <radialGradient id="brillo" cx="35%" cy="28%" r="40%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-        </radialGradient>
-      </defs>
-      {/* cera derramada: borde irregular */}
-      <path fill="url(#cera)" d="M60 4c9 0 13 6 21 7s14 1 18 9 1 13 6 20 10 10 9 19-7 12-8 20-1 15-8 20-14 4-21 9-11 9-20 9-13-6-21-7-14-2-19-9-2-14-7-21-10-10-10-19 6-13 7-21 0-15 7-20 13-4 20-9S51 4 60 4z" />
-      <circle cx="60" cy="60" r="39" fill="none" stroke="rgba(74,46,33,0.35)" strokeWidth="2.5" />
-      <circle cx="60" cy="60" r="35" fill="none" stroke="rgba(255,236,224,0.35)" strokeWidth="1" />
-      <text x="47" y="62" textAnchor="middle" fontFamily="EB Garamond, serif" fontSize="30" fill="#5A3C2E" opacity="0.85">{a}</text>
-      <text x="60" y="66" textAnchor="middle" fontFamily="Great Vibes, cursive" fontSize="16" fill="#5A3C2E" opacity="0.8">&amp;</text>
-      <text x="73" y="78" textAnchor="middle" fontFamily="EB Garamond, serif" fontSize="30" fill="#5A3C2E" opacity="0.85">{b}</text>
-      <circle cx="60" cy="60" r="56" fill="url(#brillo)" />
-    </svg>
-  );
-}
-
 export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
   const [name, setName] = useState('');
   const [showContent, setShowContent] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => setShowContent(true), 1500);
-    return () => clearTimeout(t);
-  }, []);
+  // Como el sobre de la invitación: la galería abre cuando tocan el sello.
+  const [abriendo, setAbriendo] = useState(false);
+  const abrir = () => {
+    if (abriendo) return;
+    setAbriendo(true);
+    setTimeout(() => setShowContent(true), 650);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,9 +74,9 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
             transition={{ duration: 0.5 }}
             className="z-10 flex flex-col items-center gap-4 my-auto"
           >
-            <SelloLatiendo />
-            <p className="text-[10px] tracking-[0.55em] uppercase text-[var(--muted-foreground)]/70 font-sans">
-              Abriendo
+            <SelloBoton abriendo={abriendo} alAbrir={abrir} />
+            <p className="text-[11px] tracking-[0.45em] uppercase text-[var(--muted-foreground)]/75 font-sans">
+              {EVENT.fechaCorta}
             </p>
           </motion.div>
         ) : (
@@ -134,9 +106,9 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
               initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               transition={{ delay: 0.35, duration: 0.9, ease: [0.34, 1.4, 0.5, 1] }}
-              className="flex justify-center mb-5"
+              className="flex justify-center mb-4"
             >
-              <Sello size={84} />
+              <Sello size={92} texto={null} />
             </motion.div>
 
             <h1 className="leading-[1.05]">
@@ -231,14 +203,28 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
   );
 }
 
-/** El sello en la antesala, latiendo suave — como el sobre antes de abrirse */
-function SelloLatiendo() {
+/**
+ * El sello como botón de entrada, igual que en el sobre de la invitación: late
+ * suave invitando a tocarlo y, al tocarlo, se hunde y se desvanece.
+ */
+function SelloBoton({ abriendo, alAbrir }: { abriendo: boolean; alAbrir: () => void }) {
   return (
-    <motion.div
-      animate={{ scale: [1, 1.05, 1], opacity: [0.85, 1, 0.85] }}
-      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+    <motion.button
+      type="button"
+      onClick={alAbrir}
+      aria-label="Abrir la galería"
+      className="cursor-pointer bg-transparent border-0 p-0"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+      initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
+      animate={abriendo
+        ? { scale: [1, 0.9, 1.15], opacity: [1, 1, 0], rotate: [0, -4, 6] }
+        : { opacity: 1, scale: [1, 1.035, 1], rotate: 0 }}
+      transition={abriendo
+        ? { duration: 0.65, ease: 'easeInOut' }
+        : { opacity: { duration: 0.8 }, rotate: { duration: 0.8 }, scale: { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.8 } }}
+      whileTap={{ scale: 0.94 }}
     >
-      <Sello size={92} />
-    </motion.div>
+      <Sello size={210} />
+    </motion.button>
   );
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Genera el ícono de la app (public/icon.png) con la estética de la invitación de
-Diana & Antonio: papel crema y el sello de lacre bronce rosado con "D&A".
+Diana & Antonio: papel crema y el sello de lacre topo metálico con "D&A".
 
     python3 scripts/make-icon.py
 """
@@ -11,10 +11,10 @@ from pathlib import Path
 
 SIZE  = 512
 CREMA = (246, 239, 233)
-CLARO = (210, 180, 162)   # brillo de la cera
-MEDIO = (170, 130, 104)   # caramelo
-OSCURO = (110, 78, 61)    # sombra de la cera
-TINTA = (90, 60, 46)
+CLARO = (207, 192, 176)   # brillo de la cera
+MEDIO = (163, 144, 128)   # topo
+OSCURO = (95, 80, 69)     # sombra de la cera
+TINTA = (88, 72, 61)
 SERIF = "/System/Library/Fonts/Supplemental/Georgia.ttf"
 
 out = Path(__file__).resolve().parent.parent / "public" / "icon.png"
