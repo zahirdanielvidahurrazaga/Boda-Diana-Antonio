@@ -61,14 +61,13 @@ Tipografías (las de la invitación):
 - **Caveat** — la firma manuscrita en las Polaroids
 
 Elementos:
-- **Sello de lacre** (`src/components/Sello.tsx`, SVG): copia el de la
-  invitación — cera topo metálica con vetas en remolino, borde derramado, dos
-  aros y "D&A" en relieve (filtros de luz especular de SVG, no sombras
-  dibujadas) y "Abrir" en Great Vibes. **Es el botón de entrada**: la galería
-  arranca con el sello sobre el papel y al tocarlo se hunde, se desvanece y
-  aparece la bienvenida (`SelloBoton` en `WelcomeScreen.tsx`). Encima de los
-  nombres va uno chico sin texto. El ícono de la app (`public/icon.png`,
-  `python3 scripts/make-icon.py`) es el mismo sello en topo.
+- **Sello de lacre = el botón de entrada**: es la imagen EXACTA de la
+  invitación (`public/sello.png`, sacada de su sitio: `Sello_medidaFinal.png`,
+  189 px, ampliada ×3 con Lanczos + un toque de nitidez). La galería arranca con
+  el sello sobre el papel; al tocarlo se hunde, se desvanece y aparece la
+  bienvenida (`SelloBoton` en `WelcomeScreen.tsx`). Zahir rechazó la versión
+  dibujada en SVG (9-oct): usar la imagen. El ícono (`public/icon.png`) es ese
+  mismo sello sobre crema (`scripts/make-icon.py` ya no se usa).
 - **Papel**: textura de fibra en SVG sobre el fondo crema (`index.css`).
 - **Polaroid**: marco blanco `6px 6px 54px 6px`, inclinación aleatoria por foto.
 - Frase de la invitación: «Juntos hicimos de un día cualquiera, una fecha para

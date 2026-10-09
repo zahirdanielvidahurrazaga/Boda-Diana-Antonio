@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EVENT } from '@/lib/event';
-import Sello from './Sello';
 
 interface WelcomeScreenProps {
   onJoin: (name: string) => void;
@@ -102,14 +101,6 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
               <div className="h-[1px] w-8 bg-[var(--silver)]/45" />
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ delay: 0.35, duration: 0.9, ease: [0.34, 1.4, 0.5, 1] }}
-              className="flex justify-center mb-4"
-            >
-              <Sello size={92} texto={null} />
-            </motion.div>
 
             <h1 className="leading-[1.05]">
               <span
@@ -224,7 +215,9 @@ function SelloBoton({ abriendo, alAbrir }: { abriendo: boolean; alAbrir: () => v
         : { opacity: { duration: 0.8 }, rotate: { duration: 0.8 }, scale: { duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.8 } }}
       whileTap={{ scale: 0.94 }}
     >
-      <Sello size={210} />
+      {/* El sello exacto de la invitación (public/sello.png, sacado de su sitio). */}
+      <img src="/sello.png" alt="" width={180} height={182} draggable={false}
+        style={{ display: 'block', width: 180, height: 'auto', filter: 'drop-shadow(0 10px 14px rgba(60,44,34,0.28))' }} />
     </motion.button>
   );
 }
