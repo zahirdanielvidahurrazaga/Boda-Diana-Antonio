@@ -200,9 +200,10 @@ Falta probar en teléfono real — eso lo hace Zahir.
    `qr-card.html` (local, ignorado). Falta **imprimir** las tarjetas.
 3. ✅ **Fotos de la pareja** (9-oct): `public/pareja-1.jpg` y `pareja-2.jpg`
    se funden una en otra cada 6 s con un acercamiento lento, SOLO en la
-   pantalla del nombre (no en la del sello), A TODO COLOR (Zahir pidió que se
-   vieran más: el velo crema las lavaba). SIN recuadros (Zahir rechazó las
-   tarjetas de vidrio: "tapan todo"): la foto se funde con el papel crema solo
-   arriba y abajo, donde van las letras, y el centro queda despejado; la marca de
-   agua D&A se apaga ahí (`FondoFotos` en `WelcomeScreen.tsx`). Para agregar más:
+   pantalla del nombre (no en la del sello). Estilo EDITORIAL (referencias de
+   Zahir, 9-oct): foto completa a todo color, LETRAS BLANCAS con sombra suave
+   y solo un velo oscuro ligero arriba y abajo. Rechazados: velo crema (lava
+   la foto), tarjetas de vidrio ("tapan todo") y degradado crema (no se leía).
+   Arriba: NUESTRA BODA · nombres · fecha; abajo: frase · nombre · botón de
+   vidrio blanco. La marca de agua D&A se apaga ahí (`FondoFotos` en `WelcomeScreen.tsx`). Para agregar más:
    súbelas a `public/` y añádelas a `FOTOS_PAREJA`.

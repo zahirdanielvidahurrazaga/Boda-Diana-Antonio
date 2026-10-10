@@ -13,6 +13,10 @@ interface WelcomeScreenProps {
 const FOTOS_PAREJA = ['/pareja-1.jpg', '/pareja-2.jpg'];
 const CADA_MS = 6000;
 
+// Letras blancas sobre la foto, como en una invitación editorial: una sombra
+// suave basta para leerlas sin tapar la imagen.
+const SOMBRA: React.CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.25), 0 2px 18px rgba(0,0,0,0.35)' };
+
 
 export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
   const [name, setName] = useState('');
@@ -71,63 +75,39 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
             </p>
           </motion.div>
         ) : (
-          /* ── Título ── */
+          /* ── Título: editorial sobre la foto, letras blancas ── */
           <motion.div
             key="title"
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-            className="z-10 w-full max-w-[440px] px-5 pt-12"
+            className="z-10 w-full max-w-[440px] px-8 pt-16 text-center text-white"
+            style={SOMBRA}
           >
-            <div className="text-center px-3">
-            {/* Fecha entre reglas de plata */}
-            <motion.div
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.25 }}
-              className="flex items-center justify-center gap-3 mb-7"
+              className="text-[10px] tracking-[0.55em] uppercase font-heading text-white/90"
             >
-              <div className="h-[1px] w-8 bg-[var(--silver)]/45" />
-              <span className="text-[8px] tracking-[0.5em] uppercase text-[var(--muted-foreground)]/65 font-sans font-medium whitespace-nowrap">
-                {EVENT.fechaCorta}
-              </span>
-              <div className="h-[1px] w-8 bg-[var(--silver)]/45" />
-            </motion.div>
+              {EVENT.titulo}
+            </motion.p>
 
-
-            <h1 className="leading-[1.05]">
-              <span
-                className="block font-heading font-light italic text-[var(--muted-foreground)] tracking-[0.13em]"
-                style={{ fontSize: 'clamp(0.95rem, 3.8vw, 1.15rem)' }}
-              >
-                {EVENT.titulo}
-              </span>
-              <span
-                className="block font-script text-[var(--accent-dark)] mt-1"
-                style={{ fontSize: 'clamp(2.7rem, 12.5vw, 4.6rem)', lineHeight: 1.18 }}
-              >
-                {EVENT.nombre}
-              </span>
+            <h1
+              className="font-script mt-5"
+              style={{ fontSize: 'clamp(2.9rem, 13.5vw, 4.8rem)', lineHeight: 1.1 }}
+            >
+              {EVENT.nombre}
             </h1>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.9, duration: 1 }}
-              className="mt-6 mx-auto max-w-[290px] font-heading italic text-[var(--muted-foreground)]/90 leading-relaxed"
-              style={{ fontSize: 'clamp(0.82rem, 3.4vw, 0.95rem)' }}
+              transition={{ delay: 0.6 }}
+              className="mt-4 text-[13px] tracking-[0.45em] font-heading text-white"
             >
-              «{EVENT.frase.texto}»
+              {EVENT.fechaCorta}
             </motion.p>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1 }}
-              className="mt-2.5 text-[8px] tracking-[0.45em] uppercase text-[var(--accent)] font-sans"
-            >
-              {EVENT.fechaLarga}
-            </motion.p>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -139,10 +119,20 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="z-10 w-full max-w-[400px] px-5 pb-10 pt-10"
+            className="z-10 w-full max-w-[380px] px-8 pb-10 pt-10 text-white"
+            style={SOMBRA}
           >
-            <div className="px-3">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9, duration: 1 }}
+              className="mx-auto max-w-[300px] text-center font-heading italic text-white/90 leading-relaxed"
+              style={{ fontSize: 'clamp(0.85rem, 3.5vw, 0.98rem)' }}
+            >
+              «{EVENT.frase.texto}»
+            </motion.p>
+
+            <form onSubmit={handleSubmit} className="space-y-5 mt-4">
               <div className="relative group">
                 <input
                   type="text"
@@ -151,23 +141,24 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
                   placeholder="Tu nombre"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-0 pt-6 pb-6 bg-transparent border-b border-[var(--silver)]/40 outline-none text-center text-[1.3rem] transition-colors duration-500 placeholder:text-[var(--muted-foreground)]/35 text-[var(--foreground)] font-heading italic tracking-wide focus:border-[var(--accent)]/70"
+                  className="w-full px-0 pt-5 pb-4 bg-transparent border-b border-white/50 outline-none text-center text-[1.3rem] text-white placeholder:text-white/70 font-heading italic tracking-wide transition-colors duration-500 focus:border-white"
                 />
-                <div className="absolute bottom-0 left-0 w-0 h-[1px] bg-[var(--accent)] origin-left transition-all duration-500 group-focus-within:w-full" />
+                <div className="absolute bottom-0 left-0 w-0 h-[1px] bg-white origin-left transition-all duration-500 group-focus-within:w-full" />
               </div>
 
               <motion.button
                 whileHover={{ scale: 1.012 }}
                 whileTap={{ scale: 0.985 }}
                 type="submit"
-                className="w-full py-[17px] text-[10px] font-semibold tracking-[0.3em] uppercase rounded-2xl transition-all duration-300"
+                className="w-full py-[17px] text-[10px] font-semibold tracking-[0.3em] uppercase rounded-full"
                 style={{
-                  background: 'rgba(255,255,255,0.55)',
-                  backdropFilter: 'blur(28px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                  border: '1px solid rgba(170,130,104,0.35)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 28px rgba(138,102,80,0.13)',
-                  color: 'var(--accent-dark)',
+                  background: 'rgba(255,255,255,0.16)',
+                  backdropFilter: 'blur(18px) saturate(160%)',
+                  WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+                  border: '1px solid rgba(255,255,255,0.55)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0,0,0,0.18)',
+                  color: '#fff',
+                  textShadow: 'none',
                 }}
               >
                 Entrar a la Galería
@@ -178,11 +169,10 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
-              className="mt-5 text-center text-[8px] tracking-[0.38em] uppercase text-[var(--muted-foreground)]/65 font-sans"
+              className="mt-5 text-center text-[8px] tracking-[0.38em] uppercase text-white/80 font-sans"
             >
               Comparte tus fotos de este día
             </motion.p>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -227,7 +217,7 @@ function FondoFotos() {
       </AnimatePresence>
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(to bottom, rgba(246,239,233,0.95) 0%, rgba(246,239,233,0.88) 26%, rgba(246,239,233,0.55) 36%, rgba(246,239,233,0) 47%, rgba(246,239,233,0) 60%, rgba(246,239,233,0.80) 72%, rgba(246,239,233,0.96) 84%)' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(20,14,10,0.50) 0%, rgba(20,14,10,0.28) 24%, rgba(20,14,10,0) 44%, rgba(20,14,10,0.25) 70%, rgba(20,14,10,0.62) 100%)' }}
       />
     </motion.div>
   );
