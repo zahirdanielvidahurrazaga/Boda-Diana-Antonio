@@ -165,6 +165,9 @@ npm install
 npm run dev              # http://localhost:5173
 npm run build            # tsc -b && vite build
 npm run qr -- <url>      # QR de las mesas: public/qr.png + qr-card.html (A4, 4 por hoja)
+npm run tarjetas         # TARJETAS DE MESA finales 5.5×9.5 cm (diseño elegido por Zahir 9-oct):
+                         #   tarjetas-hoja.html (carta horizontal, 8 con marcas de corte)
+                         #   tarjeta-imprenta.html (una del tamaño exacto, para imprenta)
 ```
 
 Variables (`.env.local` local, y las MISMAS en Cloudflare Pages):

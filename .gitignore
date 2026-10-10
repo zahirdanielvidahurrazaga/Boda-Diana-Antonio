@@ -43,3 +43,5 @@ next-env.d.ts
 # compilado (lo genera Cloudflare)
 /dist
 qr-card.html
+/tarjetas-hoja.html
+/tarjeta-imprenta.html

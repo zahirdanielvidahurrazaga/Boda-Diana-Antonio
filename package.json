@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "qr": "node scripts/make-qr.mjs"
+    "qr": "node scripts/make-qr.mjs",
+    "tarjetas": "node scripts/make-tarjetas.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.3",
