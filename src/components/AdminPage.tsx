@@ -75,7 +75,7 @@ export default function AdminPage() {
           const res = await fetch(photos[i].url);
           const blob = await res.blob();
           const ext = blob.type.includes('png') ? 'png' : 'jpg';
-          zip.file(`${photos[i].guest_name}_${i + 1}.${ext}`, blob);
+          zip.file(`${photos[i].guest_name.replace(/[\\/:*?"<>|]+/g, '-')}_${i + 1}.${ext}`, blob);
         } catch {
           // si una foto falla, seguimos con las demás
         }
@@ -88,7 +88,7 @@ export default function AdminPage() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000); // Safari la necesita viva un rato
     } catch {
       alert('Error al generar el ZIP. Intenta de nuevo.');
     } finally {

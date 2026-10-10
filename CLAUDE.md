@@ -174,7 +174,12 @@ VITE_SUPABASE_URL=https://dmpiyplbacqhddqsliun.supabase.co
 VITE_SUPABASE_ANON_KEY=   (la llave "anon" del proyecto; está en .env.local)
 ```
 
-Rutas: `/` galería · `/#admin` panel (estadísticas, borrar, ZIP). Código en
+Rutas: `/` galería · `/#admin` panel (estadísticas, borrar, ZIP) →
+**https://boda-diana-antonio.pages.dev/#admin**.
+
+Descargas: en el teléfono el botón de la foto abre el menú de compartir
+("Guardar imagen" → Fotos; con `<a download>` iOS la mandaba a Archivos); en
+la compu la descarga. El ZIP del admin conviene bajarlo desde una compu. Código en
 `event.ts` (`adminCode`, hoy `1710`): puerta de cortesía, no seguridad real.
 
 ---

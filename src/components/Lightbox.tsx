@@ -83,16 +83,32 @@ export default function Lightbox({
     else if (info.offset.x > THRESHOLD) goPrev();
   };
 
+  /**
+   * En el teléfono abre el menú de compartir del sistema ("Guardar imagen" la
+   * manda directo a Fotos); en la compu, o si no hay menú, la descarga.
+   */
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const response = await fetch(photo.url);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `boda-diana-antonio-${photo.guest_name.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const nombre = `boda-diana-antonio-${photo.guest_name.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}.jpg`;
+    try {
+      const blob = await (await fetch(photo.url)).blob();
+      const archivo = new File([blob], nombre, { type: blob.type || 'image/jpeg' });
+      const esTelefono = matchMedia('(pointer: coarse)').matches;
+      if (esTelefono && navigator.canShare?.({ files: [archivo] })) {
+        try { await navigator.share({ files: [archivo] }); } catch { /* cerró el menú */ }
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30_000); // Safari la necesita viva un rato
+    } catch {
+      window.open(photo.url, '_blank'); // sin red para el blob: al menos abrirla
+    }
   };
 
   if (!photo) return null;
