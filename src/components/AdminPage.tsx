@@ -240,7 +240,7 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
                   <p className="text-[8px] tracking-[0.2em] uppercase text-white/50 font-sans">De</p>
                   <p className="text-white font-heading italic text-sm">{photo.guest_name}</p>
                   {photo.message && (
@@ -272,10 +272,10 @@ export default function AdminPage() {
                   <button
                     onClick={() => setDeleteConfirm(photo.id)}
                     aria-label="Eliminar foto"
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                    className="absolute top-2 right-2 w-10 h-10 rounded-full flex items-center justify-center text-white/90 hover:text-red-400 transition-colors opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                     style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)' }}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={15} />
                   </button>
                 )}
               </motion.div>
