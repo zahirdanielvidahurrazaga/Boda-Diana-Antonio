@@ -195,7 +195,11 @@ nueva cambiaba la foto que estabas viendo). Código en
 ## ⚠️ Supabase gratuito se pausa solo
 
 A los 7 días sin actividad se pausa y la galería no carga. La boda es el
-**17 de octubre**: entrar a la galería unos días antes y el mismo día temprano.
+**17 de octubre**. Desde el 9-oct hay una GitHub Action
+(`.github/workflows/mantener-despierto.yml`) que consulta la base diario a las
+9:17 am (CDMX) para que no se duerma. Aun así, conviene abrir la galería el
+mismo día temprano. Si se pausó: Supabase → proyecto → Restore (los datos no se
+pierden). Después de entregar las fotos se puede borrar la Action.
 
 ---
 

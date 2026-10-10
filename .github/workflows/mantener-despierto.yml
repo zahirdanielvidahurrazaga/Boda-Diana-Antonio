@@ -1,0 +1,18 @@
+# Supabase gratis se pausa tras 7 días sin actividad. Esto consulta la base una
+# vez al día para que la galería no se duerma antes de la boda (17-oct-2026).
+# La llave es la "anon" pública: la misma que ya va dentro de la página.
+name: Mantener Supabase despierto
+
+on:
+  schedule:
+    - cron: '17 15 * * *'   # diario, 9:17 am hora del centro de México
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar la base
+        run: |
+          curl -fsS "https://dmpiyplbacqhddqsliun.supabase.co/rest/v1/photos?select=id&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtcGl5cGxiYWNxaGRkcXNsaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NzQ4NTIsImV4cCI6MjEwNzE1MDg1Mn0.qkNuZ5gmdgQTC12bYH5g6-ymRxZt3_UPlQeTdzKjD-I" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtcGl5cGxiYWNxaGRkcXNsaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NzQ4NTIsImV4cCI6MjEwNzE1MDg1Mn0.qkNuZ5gmdgQTC12bYH5g6-ymRxZt3_UPlQeTdzKjD-I"
