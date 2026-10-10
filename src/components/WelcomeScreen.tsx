@@ -13,6 +13,16 @@ interface WelcomeScreenProps {
 const FOTOS_PAREJA = ['/pareja-1.jpg', '/pareja-2.jpg'];
 const CADA_MS = 6000;
 
+// Vidrio de papel detrás de los textos: la foto se ve viva alrededor y las
+// letras se leen limpias encima de ella.
+const VIDRIO: React.CSSProperties = {
+  background: 'linear-gradient(160deg, rgba(251,247,243,0.78), rgba(246,239,233,0.62))',
+  backdropFilter: 'blur(16px) saturate(140%)',
+  WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+  border: '1px solid rgba(255,255,255,0.6)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 18px 40px rgba(60,44,34,0.18)',
+};
+
 export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
   const [name, setName] = useState('');
   const [showContent, setShowContent] = useState(false);
@@ -44,8 +54,8 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
         <motion.span
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.055 }}
-          transition={{ delay: 1.9, duration: 2.5 }}
+          animate={{ opacity: showContent ? 0 : 0.055 }}
+          transition={showContent ? { duration: 1.2 } : { delay: 1.9, duration: 2.5 }}
           className="font-script leading-none text-[var(--accent-dark)]"
           style={{ fontSize: 'clamp(110px, 30vw, 300px)' }}
         >
@@ -76,8 +86,9 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-            className="z-10 text-center px-8 pt-16 pb-0 w-full max-w-[440px]"
+            className="z-10 w-full max-w-[440px] px-5 pt-12"
           >
+            <div className="text-center px-6 pt-7 pb-6 rounded-[28px]" style={VIDRIO}>
             {/* Fecha entre reglas de plata */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -125,6 +136,7 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
             >
               {EVENT.fechaLarga}
             </motion.p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -136,8 +148,9 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="z-10 w-full max-w-[360px] px-8 pb-12 pt-10"
+            className="z-10 w-full max-w-[400px] px-5 pb-10 pt-10"
           >
+            <div className="px-7 pt-2 pb-6 rounded-[28px]" style={VIDRIO}>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="relative group">
                 <input
@@ -174,10 +187,11 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
-              className="mt-7 text-center text-[8px] tracking-[0.38em] uppercase text-[var(--muted-foreground)]/65 font-sans"
+              className="mt-5 text-center text-[8px] tracking-[0.38em] uppercase text-[var(--muted-foreground)]/65 font-sans"
             >
               Comparte tus fotos de este día
             </motion.p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -215,14 +229,14 @@ function FondoFotos() {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${FOTOS_PAREJA[i]})` }}
           initial={{ opacity: 0, scale: sinMovimiento ? 1 : 1.04 }}
-          animate={{ opacity: 0.42, scale: sinMovimiento ? 1 : 1.12 }}
+          animate={{ opacity: 1, scale: sinMovimiento ? 1 : 1.12 }}
           exit={{ opacity: 0 }}
           transition={{ opacity: { duration: 1.8, ease: 'easeInOut' }, scale: { duration: CADA_MS / 1000 + 2, ease: 'linear' } }}
         />
       </AnimatePresence>
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(to bottom, rgba(246,239,233,0.50) 0%, rgba(246,239,233,0.72) 45%, rgba(246,239,233,0.92) 100%)' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(246,239,233,0.30) 0%, rgba(246,239,233,0.08) 50%, rgba(246,239,233,0.30) 100%)' }}
       />
     </motion.div>
   );

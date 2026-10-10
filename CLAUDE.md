@@ -200,6 +200,8 @@ Falta probar en teléfono real — eso lo hace Zahir.
    `qr-card.html` (local, ignorado). Falta **imprimir** las tarjetas.
 3. ✅ **Fotos de la pareja** (9-oct): `public/pareja-1.jpg` y `pareja-2.jpg`
    se funden una en otra cada 6 s con un acercamiento lento, SOLO en la
-   pantalla del nombre (no en la del sello), bajo un velo crema para que el
-   texto se lea (`FondoFotos` en `WelcomeScreen.tsx`). Para agregar más:
+   pantalla del nombre (no en la del sello), A TODO COLOR (Zahir pidió que se
+   vieran más: el velo crema las lavaba). Los textos van en dos tarjetas de
+   vidrio crema (`VIDRIO`) y la pareja queda visible entre ellas; la marca de
+   agua D&A se apaga ahí (`FondoFotos` en `WelcomeScreen.tsx`). Para agregar más:
    súbelas a `public/` y añádelas a `FOTOS_PAREJA`.
