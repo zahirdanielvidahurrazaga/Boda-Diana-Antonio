@@ -10,11 +10,10 @@ interface LightboxProps {
   currentIndex: number;
   onClose: () => void;
   onNavigate: (index: number) => void;
-  likeCounts: Record<string, number>;
-  likedByMe: Set<string>;
+  totales: Record<string, number>;
+  mia: Record<string, string>;
   onToggleLike: (photoId: string) => void;
   reacciones: Record<string, Record<string, number>>;
-  misReacciones: Record<string, Set<string>>;
   onReaccionar: (photoId: string, emoji: string) => Promise<boolean>;
 }
 
@@ -33,8 +32,8 @@ const glassBtn = {
 
 export default function Lightbox({
   photos, currentIndex, onClose, onNavigate,
-  likeCounts, likedByMe, onToggleLike,
-  reacciones, misReacciones, onReaccionar,
+  totales, mia, onToggleLike,
+  reacciones, onReaccionar,
 }: LightboxProps) {
   const [direction, setDirection] = useState(0);
   const [showControls, setShowControls] = useState(true);
@@ -98,8 +97,8 @@ export default function Lightbox({
 
   if (!photo) return null;
 
-  const likes = likeCounts[photo.id] ?? 0;
-  const liked = likedByMe.has(photo.id);
+  const likes = totales[photo.id] ?? 0;
+  const liked = Boolean(mia[photo.id]);
 
   /**
    * Un toque muestra u oculta los controles; dos toques seguidos dan corazón,
@@ -112,7 +111,8 @@ export default function Lightbox({
     if (ahora - ultimoToque.current < 320) {
       ultimoToque.current = 0;
       setShowControls(v => !v);           // deshace el toque anterior
-      if (!liked) onToggleLike(photo.id); // el doble tap solo DA, nunca quita
+      // El doble tap solo DA corazón: cambia otro emoji por ❤️, nunca quita
+      if (mia[photo.id] !== '❤️') onReaccionar(photo.id, '❤️');
       if (!sinMovimiento) setFloracion(n => n + 1);
       return;
     }
@@ -266,6 +266,7 @@ export default function Lightbox({
                 <HeartButton
                   liked={liked}
                   count={likes}
+                  emoji={mia[photo.id]}
                   onToggle={() => onToggleLike(photo.id)}
                   size={21}
                 />
@@ -290,7 +291,7 @@ export default function Lightbox({
             <div className="mb-5">
               <Reacciones
                 conteo={reacciones[photo.id] ?? {}}
-                mias={misReacciones[photo.id] ?? new Set()}
+                mia={mia[photo.id]}
                 onReaccionar={emoji => onReaccionar(photo.id, emoji)}
               />
             </div>

@@ -27,7 +27,7 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
   const insertBuffer = useRef<Photo[]>([]);
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { counts, mine, toggle, reacciones, mias, reaccionar } = useLikes();
+  const { reacciones, totales, mia, toggle, reaccionar } = useLikes();
 
   useEffect(() => {
     fetchPhotos();
@@ -101,12 +101,8 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
     { photo, index }: { photo: AlbumPhoto; index: number }
   ) => {
     const tilt = TILTS[index % TILTS.length];
-    const likes = counts[photo.id] ?? 0;
-    // Las tres reacciones más usadas que no son el corazón (ese ya tiene su botón).
-    const otras = Object.entries(reacciones[photo.id] ?? {})
-      .filter(([e, n]) => e !== '❤️' && n > 0).sort((x, y) => y[1] - x[1]).slice(0, 3);
-    const totalOtras = Object.entries(reacciones[photo.id] ?? {}).filter(([e]) => e !== '❤️').reduce((s, [, n]) => s + n, 0);
-    const liked = mine.has(photo.id);
+    const likes = totales[photo.id] ?? 0;
+    const liked = Boolean(mia[photo.id]);
 
     return (
       <motion.div
@@ -142,7 +138,7 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
         {/* Firma Polaroid */}
         <div
           className="pl-1.5 pt-2.5"
-          style={{ height: '54px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1px', paddingRight: otras.length ? 96 : 44 }}
+          style={{ height: '54px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1px', paddingRight: 44 }}
         >
           {photo.message && (
             <p
@@ -170,23 +166,13 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
           </p>
         </div>
 
-        {/* Otras reacciones (las más usadas), junto al corazón */}
-        {otras.length > 0 && (
-          <div className="absolute bottom-[15px] right-[46px] flex items-center" aria-label={`${totalOtras} reacciones`}>
-            {otras.map(([e], i) => (
-              <span key={e} style={{ fontSize: 12, marginLeft: i ? -4 : 0, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.12))' }}>{e}</span>
-            ))}
-            <span className="ml-1 font-sans" style={{ fontSize: 10.5, color: 'rgba(74,58,48,0.55)' }}>{totalOtras}</span>
-          </div>
-        )}
-
         {/* Corazón */}
         <div className="absolute right-1.5 bottom-2.5">
-          <HeartButton liked={liked} count={likes} onToggle={() => toggle(photo.id)} size={17} />
+          <HeartButton liked={liked} count={likes} emoji={mia[photo.id]} onToggle={() => toggle(photo.id)} size={17} />
         </div>
       </motion.div>
     );
-  }, [counts, mine, toggle, reacciones]);
+  }, [totales, mia, toggle]);
 
   /* ── Esqueleto de carga ── */
   if (loading) {
@@ -258,11 +244,10 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
             currentIndex={selectedIndex}
             onClose={() => setSelectedIndex(null)}
             onNavigate={setSelectedIndex}
-            likeCounts={counts}
-            likedByMe={mine}
+            totales={totales}
+            mia={mia}
             onToggleLike={toggle}
             reacciones={reacciones}
-            misReacciones={mias}
             onReaccionar={reaccionar}
           />
         )}

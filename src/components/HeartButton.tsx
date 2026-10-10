@@ -8,6 +8,8 @@ interface HeartButtonProps {
   onToggle: () => void;
   /** Tamaño del corazón en píxeles — 17 en la galería, 21 en el lightbox */
   size?: number;
+  /** Mi reacción si no es el corazón: se pinta en su lugar, mismo tamaño y alineación */
+  emoji?: string;
 }
 
 type Particula = {
@@ -41,7 +43,8 @@ function hacerParticulas(radio: number): Particula[] {
   });
 }
 
-export default function HeartButton({ liked, count, onToggle, size = 17 }: HeartButtonProps) {
+export default function HeartButton({ liked, count, onToggle, size = 17, emoji }: HeartButtonProps) {
+  const otroEmoji = liked && emoji && emoji !== '❤️' ? emoji : null;
   const [estallido, setEstallido] = useState(0);
   const sinMovimiento = useReducedMotion();
 
@@ -57,7 +60,7 @@ export default function HeartButton({ liked, count, onToggle, size = 17 }: Heart
   return (
     <button
       onClick={manejar}
-      aria-label={liked ? 'Quitar corazón' : 'Dar corazón'}
+      aria-label={liked ? 'Quitar mi reacción' : 'Dar corazón'}
       aria-pressed={liked}
       className="relative flex flex-col items-center justify-center gap-[1px] py-1 select-none"
       style={{ width: size * 2.1 }}
@@ -137,14 +140,24 @@ export default function HeartButton({ liked, count, onToggle, size = 17 }: Heart
         }}
         className="relative block"
       >
-        <Heart
-          size={size}
-          style={{
-            fill: liked ? 'var(--accent)' : 'transparent',
-            color: liked ? 'var(--accent)' : 'rgba(74,58,48,0.32)',
-            transition: 'color 0.25s',
-          }}
-        />
+        {otroEmoji ? (
+          // Mi emoji en la misma caja que el corazón: mismo tamaño y alineación.
+          <span
+            className="flex items-center justify-center"
+            style={{ width: size, height: size, fontSize: size * 0.98, lineHeight: 1 }}
+          >
+            {otroEmoji}
+          </span>
+        ) : (
+          <Heart
+            size={size}
+            style={{
+              fill: liked ? 'var(--accent)' : 'transparent',
+              color: liked ? 'var(--accent)' : 'rgba(74,58,48,0.32)',
+              transition: 'color 0.25s',
+            }}
+          />
+        )}
       </motion.span>
 
       {/* ── Contador ── */}

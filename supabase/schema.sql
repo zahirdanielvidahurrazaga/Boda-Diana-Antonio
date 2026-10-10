@@ -106,3 +106,19 @@ create unique index if not exists photo_likes_una_por_emoji on public.photo_like
 alter table public.photo_likes drop constraint if exists photo_likes_emoji_valido;
 alter table public.photo_likes add constraint photo_likes_emoji_valido
   check (emoji in ('❤️', '😍', '🥹', '😂', '👏', '🔥', '🥂', '💃'));
+
+
+-- ──────────────── UNA SOLA REACCIÓN POR PERSONA POR FOTO (9-oct) ────────────────
+-- Como en Instagram: elegir otro emoji REEMPLAZA al anterior (UPDATE), tocar
+-- el mismo lo quita. Si quedaron varias de una misma persona en una foto (de
+-- cuando se permitía), se conserva la más reciente.
+delete from public.photo_likes a
+using public.photo_likes b
+where a.photo_id = b.photo_id and a.guest_key = b.guest_key
+  and (a.created_at, a.id::text) < (b.created_at, b.id::text);
+
+drop index if exists public.photo_likes_una_por_emoji;
+create unique index if not exists photo_likes_una_por_persona on public.photo_likes (photo_id, guest_key);
+
+drop policy if exists "likes_update_all" on public.photo_likes;
+create policy "likes_update_all" on public.photo_likes for update using (true) with check (true);

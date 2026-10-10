@@ -4,7 +4,8 @@ import { EMOJIS } from '@/lib/useLikes';
 
 interface Props {
   conteo: Record<string, number>;
-  mias: Set<string>;
+  /** Mi reacción en esta foto (una sola, como en Instagram) */
+  mia?: string;
   onReaccionar: (emoji: string) => Promise<boolean> | boolean;
 }
 
@@ -14,9 +15,10 @@ type Vuelo = { id: number; emoji: string; x: number; dx: number; alto: number; g
  * Reacciones rápidas como las de una historia de Instagram: una cápsula de
  * vidrio con los emojis; al tocar uno sale volando hacia arriba en varias
  * copias que se abren y se desvanecen. Abajo, el resumen de la foto con las
- * mías resaltadas. Tocar uno que ya di lo quita (sin festejo).
+ * mía resaltada. Una reacción por persona: elegir otro emoji la cambia y
+ * tocar el mismo la quita (sin festejo).
  */
-export default function Reacciones({ conteo, mias, onReaccionar }: Props) {
+export default function Reacciones({ conteo, mia, onReaccionar }: Props) {
   const [vuelos, setVuelos] = useState<Vuelo[]>([]);
   const sinMovimiento = useReducedMotion();
 
@@ -74,7 +76,7 @@ export default function Reacciones({ conteo, mias, onReaccionar }: Props) {
         }}
       >
         {EMOJIS.map((e, i) => {
-          const mia = mias.has(e);
+          const esMia = mia === e;
           return (
             <motion.button
               key={e}
@@ -82,13 +84,13 @@ export default function Reacciones({ conteo, mias, onReaccionar }: Props) {
               whileTap={{ scale: 1.45 }}
               transition={{ type: 'spring', stiffness: 500, damping: 14 }}
               onClick={() => tocar(e, i)}
-              aria-pressed={mia}
+              aria-pressed={esMia}
               aria-label={`Reaccionar con ${e}`}
               className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
               style={{
                 fontSize: 21,
-                background: mia ? 'rgba(255,255,255,0.22)' : 'transparent',
-                boxShadow: mia ? 'inset 0 0 0 1px rgba(255,255,255,0.45)' : 'none',
+                background: esMia ? 'rgba(255,255,255,0.22)' : 'transparent',
+                boxShadow: esMia ? 'inset 0 0 0 1px rgba(255,255,255,0.45)' : 'none',
               }}
             >
               {e}
@@ -106,7 +108,7 @@ export default function Reacciones({ conteo, mias, onReaccionar }: Props) {
               className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-sans"
               style={{
                 color: 'rgba(255,255,255,0.92)',
-                background: mias.has(e) ? 'rgba(170,130,104,0.55)' : 'rgba(255,255,255,0.10)',
+                background: mia === e ? 'rgba(170,130,104,0.55)' : 'rgba(255,255,255,0.10)',
                 border: '1px solid rgba(255,255,255,0.16)',
               }}
             >

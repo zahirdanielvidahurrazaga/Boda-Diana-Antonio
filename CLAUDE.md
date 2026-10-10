@@ -106,10 +106,13 @@ su teléfono, el corazón cambia sin estallido.
 ### Reacciones como historia de Instagram (9-oct)
 
 En la foto grande hay una barra de vidrio con ❤️ 😍 🥹 😂 👏 🔥 🥂 💃
-(`Reacciones.tsx`): al tocar uno salen copias volando; tocarlo de nuevo lo
-quita. Debajo, el resumen de la foto (las mías en caramelo). En cada Polaroid,
-junto al corazón, los 3 emojis más usados y el total. El corazón y el doble tap
-siguen igual: el corazón es el emoji '❤️'.
+(`Reacciones.tsx`): al tocar uno salen copias volando. **UNA reacción por
+persona por foto** (pedido de Zahir, 9-oct): elegir otro emoji REEMPLAZA al
+que tenía (UPDATE de la misma fila) y tocar el mismo la quita. Debajo, el
+resumen de la foto (la mía en caramelo). En cada Polaroid solo va el botón de
+siempre con el total: si mi reacción es otro emoji, el botón muestra ESE emoji
+en el lugar y tamaño exactos del corazón (`HeartButton`, prop `emoji`); tocarlo
+quita mi reacción. El doble tap da ❤️ (si tenía otro emoji, lo cambia a ❤️).
 
 `useLikes.ts` guarda FILAS por id (no contadores): sin dobles conteos entre la
 recarga y el tiempo real, y los DELETE se resuelven por id (con RLS, Supabase
@@ -140,7 +143,8 @@ Ojo: usar **curl, no python-urllib** — Cloudflare bloquea ese user-agent con 4
 ```
 photos        id · created_at · url · guest_name · event_id · width · height · message
 photo_likes   id · photo_id → photos(id) · guest_key · emoji · created_at
-              unique(photo_id, guest_key, emoji)  ← cada emoji una vez por invitado por foto
+              unique(photo_id, guest_key)  ← una reacción por invitado por foto
+              política UPDATE abierta (para cambiar de emoji)
               check: emoji en los 8 de la barra
 ```
 

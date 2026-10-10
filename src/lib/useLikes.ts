@@ -7,32 +7,27 @@ export const CORAZON = '❤️';
 
 type Fila = { id: string; photo_id: string; guest_key: string; emoji: string };
 type Conteo = Record<string, Record<string, number>>; // foto → emoji → cuántas
-type Mias = Record<string, Set<string>>;              // foto → emojis que di yo
 
-const clave = (foto: string, emoji: string) => `${foto}|${emoji}`;
 const PAGINA = 1000; // tope de filas por consulta de la API de Supabase
 
 /**
- * Reacciones de las fotos (el corazón es una más: el emoji '❤️').
+ * Reacciones de las fotos — UNA por persona por foto, como en Instagram.
+ * El corazón es una más (el emoji '❤️'). Elegir otro emoji REEMPLAZA al que
+ * tenía (UPDATE de la misma fila); tocar el mismo lo quita.
  *
- * Cada invitado puede dar cada emoji una vez por foto y quitarlo. No hace falta
- * que se registre: se le asigna una llave anónima guardada en su teléfono.
- *
- * Cómo se mantiene al día sin desfasarse (revisión de Codex, 9-oct):
- *  · Todo se guarda como FILAS por id (no contadores sueltos): un INSERT que
- *    llega por tiempo real y la misma fila en una recarga no se cuentan doble.
+ * Cómo se mantiene al día sin desfasarse:
+ *  · Todo se guarda como FILAS por id: un aviso en tiempo real y la misma fila
+ *    en una recarga no se cuentan doble.
  *  · Los borrados se resuelven por id: con RLS activado, Supabase manda en el
- *    aviso de DELETE solo la llave primaria (sin photo_id ni emoji).
- *  · Lo mío se pinta al instante como "pendiente" y se vuelve fila real cuando
- *    la base responde; si falla, el pendiente se descarta.
- *  · Mientras una reacción está en camino, otro toque a la MISMA se ignora (así
- *    dar y quitar muy rápido no se guarda al revés).
+ *    aviso de DELETE solo la llave primaria.
+ *  · Lo mío se pinta al instante como "pendiente" hasta que la base responde;
+ *    mientras va en camino, otro toque en la misma foto se ignora.
  *  · La carga pagina de 1,000 en 1,000.
  */
 export function useLikes() {
   const [filas, setFilas] = useState<Map<string, Fila>>(new Map());
-  // Intención local mientras la base responde: true = dando, false = quitando.
-  const [pendientes, setPendientes] = useState<Map<string, boolean>>(new Map());
+  // Mi intención por foto mientras la base responde: emoji, o null = quitar.
+  const [pendientes, setPendientes] = useState<Map<string, string | null>>(new Map());
   const enCamino = useRef<Set<string>>(new Set());
   const guestKey = useRef(getGuestKey());
 
@@ -51,17 +46,16 @@ export function useLikes() {
   useEffect(() => {
     fetchLikes();
 
+    const poner = (r: PhotoLike) => setFilas(prev => {
+      const next = new Map(prev);
+      next.set(r.id, { id: r.id, photo_id: r.photo_id, guest_key: r.guest_key, emoji: r.emoji || CORAZON });
+      return next;
+    });
+
     const channel = supabase
       .channel('realtime:photo_likes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'photo_likes' }, payload => {
-        const r = payload.new as PhotoLike;
-        setFilas(prev => {
-          if (prev.has(r.id)) return prev;
-          const next = new Map(prev);
-          next.set(r.id, { id: r.id, photo_id: r.photo_id, guest_key: r.guest_key, emoji: r.emoji || CORAZON });
-          return next;
-        });
-      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'photo_likes' }, p => poner(p.new as PhotoLike))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'photo_likes' }, p => poner(p.new as PhotoLike))
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'photo_likes' }, payload => {
         const id = (payload.old as Partial<PhotoLike>).id;
         if (!id) { fetchLikes(); return; }
@@ -86,66 +80,69 @@ export function useLikes() {
     };
   }, [fetchLikes]);
 
-  // Conteos y "las mías" salen de las filas + lo pendiente.
-  const { reacciones, mias } = useMemo(() => {
+  // Conteos por emoji, total por foto y MI reacción por foto (filas + pendiente).
+  const { reacciones, totales, mia } = useMemo(() => {
     const conteo: Conteo = {};
-    const propias: Mias = {};
+    const total: Record<string, number> = {};
+    const propia: Record<string, string> = {};
+    const sumar = (foto: string, emoji: string, d: number) => {
+      (conteo[foto] ??= {})[emoji] = Math.max(0, (conteo[foto]?.[emoji] ?? 0) + d);
+      total[foto] = Math.max(0, (total[foto] ?? 0) + d);
+    };
     for (const f of filas.values()) {
-      (conteo[f.photo_id] ??= {})[f.emoji] = (conteo[f.photo_id]?.[f.emoji] ?? 0) + 1;
-      if (f.guest_key === guestKey.current) (propias[f.photo_id] ??= new Set()).add(f.emoji);
+      sumar(f.photo_id, f.emoji, 1);
+      if (f.guest_key === guestKey.current) propia[f.photo_id] = f.emoji;
     }
-    for (const [k, dando] of pendientes) {
-      const [foto, emoji] = k.split('|');
-      const ya = propias[foto]?.has(emoji) ?? false;
-      if (dando && !ya) {
-        (conteo[foto] ??= {})[emoji] = (conteo[foto]?.[emoji] ?? 0) + 1;
-        (propias[foto] ??= new Set()).add(emoji);
-      } else if (!dando && ya) {
-        conteo[foto][emoji] = Math.max(0, (conteo[foto][emoji] ?? 1) - 1);
-        propias[foto].delete(emoji);
-      }
+    for (const [foto, quiero] of pendientes) {
+      const tengo = propia[foto];
+      if (tengo === quiero || (tengo === undefined && quiero === null)) continue;
+      if (tengo) sumar(foto, tengo, -1);
+      if (quiero) { sumar(foto, quiero, 1); propia[foto] = quiero; } else delete propia[foto];
     }
-    return { reacciones: conteo, mias: propias };
+    return { reacciones: conteo, totales: total, mia: propia };
   }, [filas, pendientes]);
 
-  /** Da o quita una reacción. Devuelve true solo si quedó DADA y guardada (para festejar). */
+  /**
+   * Reacciona con `emoji`: si era la mía, la quita; si tenía otra, la cambia.
+   * Devuelve true solo si quedó PUESTA y guardada (para festejar).
+   */
   const reaccionar = useCallback(async (photoId: string, emoji: string) => {
-    const k = clave(photoId, emoji);
-    if (enCamino.current.has(k)) return false; // ya va una en camino para esta misma
-    enCamino.current.add(k);
-    const tenia = mias[photoId]?.has(emoji) ?? false;
-    setPendientes(prev => new Map(prev).set(k, !tenia));
+    if (enCamino.current.has(photoId)) return false; // ya va una en camino para esta foto
+    enCamino.current.add(photoId);
+    const tengo = mia[photoId];
+    const quiero = tengo === emoji ? null : emoji;
+    setPendientes(prev => new Map(prev).set(photoId, quiero));
 
+    const miFila = [...filas.values()].find(f => f.photo_id === photoId && f.guest_key === guestKey.current);
     let ok = false;
-    if (tenia) {
-      const { data, error } = await supabase.from('photo_likes').delete()
-        .match({ photo_id: photoId, guest_key: guestKey.current, emoji }).select('id');
+    if (quiero === null) {
+      const { error } = await supabase.from('photo_likes').delete().match({ photo_id: photoId, guest_key: guestKey.current });
       ok = !error;
-      if (ok) setFilas(prev => {
-        const next = new Map(prev);
-        for (const r of data ?? []) next.delete(r.id);
-        return next;
-      });
+      if (ok && miFila) setFilas(prev => { const n = new Map(prev); n.delete(miFila.id); return n; });
+    } else if (tengo && miFila) {
+      const { data, error } = await supabase.from('photo_likes').update({ emoji: quiero }).eq('id', miFila.id).select('id');
+      ok = !error && (data?.length ?? 0) > 0;
+      if (ok) setFilas(prev => new Map(prev).set(miFila.id, { ...miFila, emoji: quiero }));
+      // La quité desde otra pestaña antes del cambio: la base manda.
+      else if (!error) fetchLikes();
     } else {
       const { data, error } = await supabase.from('photo_likes')
-        .insert({ photo_id: photoId, guest_key: guestKey.current, emoji }).select('id').single();
+        .insert({ photo_id: photoId, guest_key: guestKey.current, emoji: quiero }).select('id').single();
       ok = !error && Boolean(data);
-      if (ok) setFilas(prev => new Map(prev).set(data!.id, { id: data!.id, photo_id: photoId, guest_key: guestKey.current, emoji }));
-      // Ya existía (otro teléfono con la misma llave, o una carrera): la base manda.
+      if (ok) setFilas(prev => new Map(prev).set(data!.id, { id: data!.id, photo_id: photoId, guest_key: guestKey.current, emoji: quiero }));
+      // Ya había una (otro teléfono con la misma llave o una carrera): la base manda.
       if (error?.code === '23505') fetchLikes();
     }
     if (!ok) console.error('[useLikes] no se guardó la reacción');
 
-    setPendientes(prev => { const next = new Map(prev); next.delete(k); return next; });
-    enCamino.current.delete(k);
-    return ok && !tenia;
-  }, [mias, fetchLikes]);
+    setPendientes(prev => { const n = new Map(prev); n.delete(photoId); return n; });
+    enCamino.current.delete(photoId);
+    return ok && quiero !== null;
+  }, [mia, filas, fetchLikes]);
 
-  // Lo de siempre (el corazón), para el botón de cada Polaroid y el doble tap.
-  const counts = useMemo<Record<string, number>>(
-    () => Object.fromEntries(Object.entries(reacciones).map(([f, c]) => [f, c[CORAZON] ?? 0])), [reacciones]);
-  const mine = useMemo(() => new Set(Object.entries(mias).filter(([, s]) => s.has(CORAZON)).map(([f]) => f)), [mias]);
-  const toggle = useCallback((photoId: string) => reaccionar(photoId, CORAZON), [reaccionar]);
+  // El botón de cada Polaroid: el total de reacciones y la mía (si tengo).
+  // Tocarlo da corazón si no tengo nada, o quita la que tenga.
+  const toggle = useCallback((photoId: string) => reaccionar(photoId, mia[photoId] ?? CORAZON), [reaccionar, mia]);
 
-  return { counts, mine, toggle, reacciones, mias, reaccionar };
+  return { reacciones, totales, mia, toggle, reaccionar };
 }
