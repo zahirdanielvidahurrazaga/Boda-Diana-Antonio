@@ -179,7 +179,15 @@ Rutas: `/` galería · `/#admin` panel (estadísticas, borrar, ZIP) →
 
 Descargas: en el teléfono el botón de la foto abre el menú de compartir
 ("Guardar imagen" → Fotos; con `<a download>` iOS la mandaba a Archivos); en
-la compu la descarga. El ZIP del admin conviene bajarlo desde una compu. Código en
+la compu la descarga. El ZIP del admin conviene bajarlo desde una compu.
+
+Panel (revisado 9-oct): cuenta REACCIONES (todas, con los 3 emojis más usados
+por foto), carga TODO paginado (`traerFotos`/`traerReacciones` en
+`supabase.ts`; la API corta en 1,000 y la galería antes cortaba en 300),
+borrar quita la fila Y el archivo del bucket, el ZIP avisa si faltaron fotos, y
+en el teléfono el nombre y el bote se ven siempre (no hay hover). En la
+galería, la foto abierta se recuerda por id (antes por posición: una subida
+nueva cambiaba la foto que estabas viendo). Código en
 `event.ts` (`adminCode`, hoy `1710`): puerta de cortesía, no seguridad real.
 
 ---

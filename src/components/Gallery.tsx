@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MasonryPhotoAlbum } from 'react-photo-album';
 import 'react-photo-album/masonry.css';
-import { supabase, type Photo } from '@/lib/supabase';
+import { supabase, traerFotos, type Photo } from '@/lib/supabase';
 import { useLikes } from '@/lib/useLikes';
 import { EVENT } from '@/lib/event';
 import Lightbox from './Lightbox';
@@ -23,7 +23,10 @@ type AlbumPhoto = {
 export default function Gallery({ refreshKey }: { refreshKey?: number }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  // La foto abierta se recuerda por id, no por posición: si llega una foto
+  // nueva (se agrega arriba) o el admin borra una, la abierta no cambia.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIndex = selectedId ? photos.findIndex(p => p.id === selectedId) : -1;
   const insertBuffer = useRef<Photo[]>([]);
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -70,19 +73,10 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
   }, []);
 
   const fetchPhotos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(300);
-      if (error) throw error;
-      setPhotos(data || []);
-    } catch {
-      setPhotos([]);
-    } finally {
-      setLoading(false);
-    }
+    // Todas (paginado); si falla la red, se queda lo que ya se veía.
+    const data = await traerFotos();
+    if (data) setPhotos(data);
+    setLoading(false);
   };
 
   const formattedPhotos = useMemo<AlbumPhoto[]>(() => photos.map(p => ({
@@ -111,7 +105,7 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
         whileHover={{ scale: 1.04, rotate: 0 }}
         viewport={{ once: true, margin: '-20px' }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        onClick={() => setSelectedIndex(index)}
+        onClick={() => setSelectedId(photo.id)}
         className="cursor-pointer group relative"
         style={{
           background: '#fff',
@@ -237,13 +231,13 @@ export default function Gallery({ refreshKey }: { refreshKey?: number }) {
       </div>
 
       <AnimatePresence>
-        {selectedIndex !== null && (
+        {selectedIndex >= 0 && (
           <Lightbox
             key="lightbox"
             photos={photos}
             currentIndex={selectedIndex}
-            onClose={() => setSelectedIndex(null)}
-            onNavigate={setSelectedIndex}
+            onClose={() => setSelectedId(null)}
+            onNavigate={i => setSelectedId(photos[i]?.id ?? null)}
             totales={totales}
             mia={mia}
             onToggleLike={toggle}

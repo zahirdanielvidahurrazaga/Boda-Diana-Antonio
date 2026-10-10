@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, Download, Camera, Users, Heart, Loader2 } from 'lucide-react';
-import { supabase, type Photo } from '@/lib/supabase';
+import { Trash2, Download, Camera, Users, SmilePlus, Loader2 } from 'lucide-react';
+import { supabase, traerFotos, traerReacciones, rutaEnBucket, type Photo } from '@/lib/supabase';
+import { EMOJIS } from '@/lib/useLikes';
 import { EVENT } from '@/lib/event';
 
 export default function AdminPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [likeTotals, setLikeTotals] = useState<Record<string, number>>({});
+  // foto → emoji → cuántas reacciones
+  const [reacciones, setReacciones] = useState<Record<string, Record<string, number>>>({});
+  const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState('');
@@ -30,33 +33,40 @@ export default function AdminPage() {
   };
 
   const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [photosRes, likesRes] = await Promise.all([
-        supabase.from('photos').select('*').order('created_at', { ascending: false }),
-        // Solo corazones: las demás reacciones (emojis) no cuentan como corazón.
-        supabase.from('photo_likes').select('photo_id').eq('emoji', '❤️').limit(10000),
-      ]);
-      if (photosRes.error) throw photosRes.error;
-      setPhotos(photosRes.data || []);
-
-      const totals: Record<string, number> = {};
-      for (const row of likesRes.data ?? []) {
-        totals[row.photo_id] = (totals[row.photo_id] ?? 0) + 1;
+    // Todas las fotos y reacciones, paginadas (la API corta en 1,000).
+    const [fotos, filas] = await Promise.all([traerFotos(), traerReacciones()]);
+    setLoadError(!fotos || !filas);
+    if (fotos) setPhotos(fotos);
+    if (filas) {
+      const conteo: Record<string, Record<string, number>> = {};
+      for (const r of filas) {
+        const e = r.emoji || '❤️';
+        (conteo[r.photo_id] ??= {})[e] = (conteo[r.photo_id]?.[e] ?? 0) + 1;
       }
-      setLikeTotals(totals);
-    } catch (err) {
-      console.error('Error al cargar:', err);
-    } finally {
-      setLoading(false);
+      setReacciones(conteo);
     }
+    setLoading(false);
   };
 
-  const handleDelete = async (id: string) => {
+  // Al volver a la pestaña, traer lo nuevo que subieron mientras tanto.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const alVolver = () => { if (!document.hidden) fetchAll(); };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => document.removeEventListener('visibilitychange', alVolver);
+  }, [isAuthenticated]);
+
+  const handleDelete = async (photo: Photo) => {
     try {
-      const { error } = await supabase.from('photos').delete().match({ id });
+      const { error } = await supabase.from('photos').delete().match({ id: photo.id });
       if (error) throw error;
-      setPhotos(prev => prev.filter(p => p.id !== id));
+      setPhotos(prev => prev.filter(p => p.id !== photo.id));
+      // También el archivo, para que el enlace de la foto deje de funcionar.
+      const ruta = rutaEnBucket(photo.url, EVENT.bucket);
+      if (ruta) {
+        const { error: errArchivo } = await supabase.storage.from(EVENT.bucket).remove([ruta]);
+        if (errArchivo) alert('La foto ya no aparece en la galería, pero su archivo no se pudo borrar del almacenamiento. Avísale a Zahir.');
+      }
     } catch (err) {
       alert(`Error al eliminar: ${err instanceof Error ? err.message : 'desconocido'}`);
     } finally {
@@ -70,14 +80,16 @@ export default function AdminPage() {
     try {
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
+      let fallidas = 0;
       for (let i = 0; i < photos.length; i++) {
         try {
           const res = await fetch(photos[i].url);
+          if (!res.ok) throw new Error(String(res.status));
           const blob = await res.blob();
           const ext = blob.type.includes('png') ? 'png' : 'jpg';
           zip.file(`${photos[i].guest_name.replace(/[\\/:*?"<>|]+/g, '-')}_${i + 1}.${ext}`, blob);
         } catch {
-          // si una foto falla, seguimos con las demás
+          fallidas++; // si una foto falla, seguimos con las demás
         }
       }
       const content = await zip.generateAsync({ type: 'blob' });
@@ -89,6 +101,7 @@ export default function AdminPage() {
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 60_000); // Safari la necesita viva un rato
+      if (fallidas > 0) alert(`El ZIP se descargó, pero ${fallidas} foto(s) no se pudieron incluir. Intenta de nuevo con buena conexión.`);
     } catch {
       alert('Error al generar el ZIP. Intenta de nuevo.');
     } finally {
@@ -96,12 +109,13 @@ export default function AdminPage() {
     }
   };
 
-  const totalLikes = Object.values(likeTotals).reduce((a, b) => a + b, 0);
+  const totalDe = (foto: string) => Object.values(reacciones[foto] ?? {}).reduce((a, b) => a + b, 0);
+  const totalReacciones = photos.reduce((a, p) => a + totalDe(p.id), 0);
 
   const stats = [
     { label: 'Fotos', value: photos.length, icon: Camera },
     { label: 'Invitados', value: new Set(photos.map(p => p.guest_name)).size, icon: Users },
-    { label: 'Corazones', value: totalLikes, icon: Heart },
+    { label: 'Reacciones', value: totalReacciones, icon: SmilePlus },
   ];
 
   /* ── Puerta ── */
@@ -126,7 +140,7 @@ export default function AdminPage() {
               placeholder="Código de acceso"
               value={passcode}
               onChange={e => setPasscode(e.target.value)}
-              className="w-full bg-transparent border-b border-[var(--silver)]/40 py-4 text-center text-xl outline-none focus:border-[var(--accent)]/70 transition-all placeholder:text-[var(--muted-foreground)]/30 text-[var(--foreground)] font-heading"
+              className="w-full bg-transparent border-b border-[var(--silver)]/40 py-4 text-center text-xl outline-none focus:border-[var(--accent)]/70 transition-all placeholder:text-[var(--muted-foreground)]/55 text-[var(--foreground)] font-heading"
             />
             {authError && (
               <p className="text-[9px] tracking-[0.25em] uppercase text-red-400 font-sans">
@@ -140,7 +154,7 @@ export default function AdminPage() {
               Entrar
             </button>
           </form>
-          <a href="/#" className="block text-[8.5px] tracking-[0.3em] uppercase text-[var(--muted-foreground)]/40 hover:text-[var(--accent-dark)] transition-colors font-sans">
+          <a href="/#" className="block text-[8.5px] tracking-[0.3em] uppercase text-[var(--muted-foreground)]/70 hover:text-[var(--accent-dark)] transition-colors font-sans">
             ← Volver a la galería
           </a>
         </motion.div>
@@ -162,13 +176,13 @@ export default function AdminPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-heading italic text-[var(--foreground)]/85 text-lg leading-tight">Panel</h1>
-              <p className="text-[8px] tracking-[0.35em] uppercase text-[var(--muted-foreground)]/50 font-sans mt-0.5">
+              <p className="text-[8px] tracking-[0.35em] uppercase text-[var(--muted-foreground)]/70 font-sans mt-0.5">
                 Boda de {EVENT.nombre}
               </p>
             </div>
             <a
               href="/#"
-              className="text-[8.5px] tracking-[0.25em] uppercase text-[var(--muted-foreground)]/55 hover:text-[var(--accent-dark)] transition-colors font-sans border border-[var(--silver)]/30 px-4 py-2"
+              className="text-[8.5px] tracking-[0.25em] uppercase text-[var(--muted-foreground)]/75 hover:text-[var(--accent-dark)] transition-colors font-sans border border-[var(--silver)]/30 px-4 py-2"
             >
               ← Galería
             </a>
@@ -199,17 +213,23 @@ export default function AdminPage() {
             >
               <stat.icon className="w-4 h-4 text-[var(--accent)]/60 mx-auto mb-2" />
               <p className="text-2xl font-heading text-[var(--foreground)]/85">{stat.value}</p>
-              <p className="text-[8px] tracking-[0.2em] uppercase text-[var(--muted-foreground)]/50 mt-1 font-sans">
+              <p className="text-[8px] tracking-[0.2em] uppercase text-[var(--muted-foreground)]/70 mt-1 font-sans">
                 {stat.label}
               </p>
             </motion.div>
           ))}
         </div>
 
+        {loadError && (
+          <p className="mb-6 text-center text-[11px] text-red-500/80 font-sans">
+            No se pudo cargar todo (¿sin conexión?). Recarga la página.
+          </p>
+        )}
+
         {loading ? (
-          <p className="text-center text-[var(--muted-foreground)]/40 font-sans text-sm py-20">Cargando fotos...</p>
+          <p className="text-center text-[var(--muted-foreground)]/65 font-sans text-sm py-20">Cargando fotos...</p>
         ) : photos.length === 0 ? (
-          <p className="text-center text-[var(--muted-foreground)]/45 font-heading italic text-xl py-20">Sin fotos aún.</p>
+          <p className="text-center text-[var(--muted-foreground)]/65 font-heading italic text-xl py-20">Sin fotos aún.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {photos.map((photo, i) => (
@@ -227,24 +247,28 @@ export default function AdminPage() {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
-                {/* Corazones de esta foto */}
-                {(likeTotals[photo.id] ?? 0) > 0 && (
+                {/* Reacciones de esta foto: las 3 más usadas y el total */}
+                {totalDe(photo.id) > 0 && (
                   <div
                     className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full pointer-events-none"
                     style={{ background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(8px)' }}
                   >
-                    <Heart size={10} className="text-white/85" style={{ fill: 'currentColor' }} />
-                    <span className="text-[9px] text-white/85 font-sans tabular-nums leading-none">
-                      {likeTotals[photo.id]}
+                    <span className="text-[11px] leading-none">
+                      {EMOJIS.filter(e => reacciones[photo.id]?.[e])
+                        .sort((a, b) => (reacciones[photo.id][b] ?? 0) - (reacciones[photo.id][a] ?? 0))
+                        .slice(0, 3).join('')}
+                    </span>
+                    <span className="text-[10px] text-white/90 font-sans tabular-nums leading-none">
+                      {totalDe(photo.id)}
                     </span>
                   </div>
                 )}
 
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pointer-events-none">
-                  <p className="text-[8px] tracking-[0.2em] uppercase text-white/50 font-sans">De</p>
+                  <p className="text-[8px] tracking-[0.2em] uppercase text-white/70 font-sans">De</p>
                   <p className="text-white font-heading italic text-sm">{photo.guest_name}</p>
                   {photo.message && (
-                    <p className="text-white/60 text-xs mt-0.5" style={{ fontFamily: 'Caveat, cursive' }}>
+                    <p className="text-white/80 text-xs mt-0.5" style={{ fontFamily: 'Caveat, cursive' }}>
                       "{photo.message}"
                     </p>
                   )}
@@ -255,7 +279,7 @@ export default function AdminPage() {
                     <p className="text-white text-xs text-center font-sans">¿Eliminar esta foto?</p>
                     <div className="flex gap-2 w-full">
                       <button
-                        onClick={() => handleDelete(photo.id)}
+                        onClick={() => handleDelete(photo)}
                         className="flex-1 py-2 bg-red-500/80 text-white text-[9px] font-bold tracking-wider uppercase font-sans"
                       >
                         Sí, eliminar
