@@ -198,5 +198,8 @@ Falta probar en teléfono real — eso lo hace Zahir.
 1. ✅ Desplegado en **https://boda-diana-antonio.pages.dev** (Cloudflare Pages, push a main = deploy).
 2. ✅ QR generado (9-oct) y verificado que lleva a esa URL: `public/qr.png` y
    `qr-card.html` (local, ignorado). Falta **imprimir** las tarjetas.
-3. (Opcional) **Foto de la pareja** para el fondo de la bienvenida:
-   `public/pareja.jpg` + `HERO_PHOTO = '/pareja.jpg'` en `WelcomeScreen.tsx`.
+3. ✅ **Fotos de la pareja** (9-oct): `public/pareja-1.jpg` y `pareja-2.jpg`
+   se funden una en otra cada 6 s con un acercamiento lento, SOLO en la
+   pantalla del nombre (no en la del sello), bajo un velo crema para que el
+   texto se lea (`FondoFotos` en `WelcomeScreen.tsx`). Para agregar más:
+   súbelas a `public/` y añádelas a `FOTOS_PAREJA`.

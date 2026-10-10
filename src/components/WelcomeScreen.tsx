@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { EVENT } from '@/lib/event';
 
 interface WelcomeScreenProps {
@@ -7,11 +7,11 @@ interface WelcomeScreenProps {
 }
 
 /**
- * Foto de la pareja para el fondo (opcional). Si la mandan, se guarda en
- * /public/pareja.jpg y se pone aquí: HERO_PHOTO = '/pareja.jpg'.
- * Mientras tanto la pantalla se sostiene sola con el papel y el sello.
+ * Fotos de la pareja que van cambiando de fondo en la pantalla del nombre
+ * (en /public). Para agregar más, súbelas ahí y añádelas a la lista.
  */
-const HERO_PHOTO: string | null = null;
+const FOTOS_PAREJA = ['/pareja-1.jpg', '/pareja-2.jpg'];
+const CADA_MS = 6000;
 
 export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
   const [name, setName] = useState('');
@@ -35,19 +35,10 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
       className="relative flex flex-col items-center justify-between min-h-[100dvh] overflow-hidden"
       style={{ background: 'radial-gradient(ellipse 120% 80% at 50% 0%, #FBF7F3 0%, #F6EFE9 45%, #EDE2D8 100%)' }}
     >
-      {/* ── Foto de fondo (si la hay) ── */}
-      {HERO_PHOTO && (
-        <div className="absolute inset-0 z-0">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${HERO_PHOTO})`, opacity: 0.32 }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{ background: 'linear-gradient(to bottom, rgba(246,239,233,0.55) 0%, rgba(246,239,233,0.80) 55%, rgba(246,239,233,0.96) 100%)' }}
-          />
-        </div>
-      )}
+      {/* ── Fotos de la pareja (solo en la pantalla del nombre) ── */}
+      <AnimatePresence>
+        {showContent && <FondoFotos />}
+      </AnimatePresence>
 
       {/* ── Nombre enorme de marca de agua ── */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
@@ -191,6 +182,49 @@ export default function WelcomeScreen({ onJoin }: WelcomeScreenProps) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/**
+ * Las fotos de la pareja se funden una en otra con un acercamiento lento, bajo
+ * un velo de papel crema para que el nombre y el formulario se sigan leyendo.
+ */
+function FondoFotos() {
+  const [i, setI] = useState(0);
+  const sinMovimiento = useReducedMotion();
+
+  useEffect(() => {
+    FOTOS_PAREJA.forEach(src => { new Image().src = src; }); // sin parpadeo al cambiar
+    if (FOTOS_PAREJA.length < 2) return;
+    const t = setInterval(() => setI(n => (n + 1) % FOTOS_PAREJA.length), CADA_MS);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <motion.div
+      className="absolute inset-0 z-0 pointer-events-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.6 }}
+      aria-hidden="true"
+    >
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={FOTOS_PAREJA[i]}
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${FOTOS_PAREJA[i]})` }}
+          initial={{ opacity: 0, scale: sinMovimiento ? 1 : 1.04 }}
+          animate={{ opacity: 0.42, scale: sinMovimiento ? 1 : 1.12 }}
+          exit={{ opacity: 0 }}
+          transition={{ opacity: { duration: 1.8, ease: 'easeInOut' }, scale: { duration: CADA_MS / 1000 + 2, ease: 'linear' } }}
+        />
+      </AnimatePresence>
+      <div
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(to bottom, rgba(246,239,233,0.50) 0%, rgba(246,239,233,0.72) 45%, rgba(246,239,233,0.92) 100%)' }}
+      />
+    </motion.div>
   );
 }
 
